@@ -29,7 +29,7 @@ fn main() {
             oper.operation_perf = args[2].chars().nth(1).unwrap().to_digit(10).unwrap() as i8;
         } else { exit(1) }
         if oper.is_dir() && (1..3).contains(&(oper.operation_perf as i32)) { exit(1); }
-        read_meta("test", &mut meta).unwrap();
+        read_meta(args[1].as_str(), &mut meta).unwrap();
 
         // Check the file exists, or doesn't, if it's trying to create one
         if !meta.structure.contains_key(&oper.path) {
@@ -61,7 +61,7 @@ fn main() {
                 if oper.operation_perf == 0 {
                     if oper.is_file() {
                         let bytes = read_file(args[1].clone(), oper.path.clone());
-                        println!("{:?}", bytes)
+                        //println!("{:?}", bytes)
                     } else {
                         let mut files = Vec::new();
                         for (path, id) in meta.structure {
@@ -76,7 +76,7 @@ fn main() {
                 else if oper.operation_perf == 2 {
                     if oper.is_file() {
                         let bytes = get_file_type(args[1].clone(), oper.path.clone());
-                        println!("{:?}", bytes);
+                       // println!("{:?}", bytes);
                     } else {
                         exit(1);
                     }
@@ -159,6 +159,7 @@ fn read_file(fs : String, path : String) -> Box<[u8]> {
                 }
                 file_header += &c.to_string();
                 if count == 2 {
+                    println!("{}", line.strip_prefix(&file_header).unwrap());
                     return Box::from(line.strip_prefix(&file_header).unwrap().as_bytes());
                 }
             }
@@ -184,6 +185,7 @@ fn get_file_type(fs : String, path : String) -> Box<[u8]> {
                 }
 
                 if count == 2 {
+                    println!("{}", filetype);
                     return Box::from(filetype.as_bytes());
                 }
             }

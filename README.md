@@ -47,6 +47,19 @@ Remove the filesystem at `/home/june/filesystem`:
 jbdfs rfs /home/june/filesystem
 ```
 
+The filepath syntax for files within the filesystem is very different to a normal filesystem.
+
+```
+root -> somefolder -> somefile
+```
+It uses arrows instead of normal `/` or `\`. The above can also be written in a few different ways;
+```
+root->somefolder->somefile
+somefolder -> somefile
+somefolder->somefile
+```
+spaces cannot be used in file/directory names and will be automatically removed.
+
 ## Extra info
 
 - Currently WIP

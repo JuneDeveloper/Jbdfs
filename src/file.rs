@@ -156,7 +156,7 @@ impl FsFile {
 
     /// Reads a file. Data will not be touched. Returns either a byte array, or a string.
     /// You can't read a directory, however you can get a list of all subfiles/subdirectories. This returns the raw bytes, but can also return the string value.
-    pub fn read(mut self, fs : String) -> Result<Vec<u8>, Error> {
+    pub fn read(mut self, fs : String) -> Result<String, Error> {
         let mut reader = BufReader::new(File::open(fs.clone() + "/meta.jbdfsm")?).lines();
         let mut dir = "root".to_string();
         // Search for ID
@@ -174,7 +174,7 @@ impl FsFile {
         }
         // Read the data
         let mut data = BufReader::new(File::open(fs.clone() + "/data.jbdfs")?).lines().nth(self.id as usize).unwrap().unwrap();
-        Ok(data.as_bytes().to_owned())
+        Ok(data)
 
 
 

@@ -25,7 +25,7 @@ jbdfs <action> <path> <filepath> <extras>
 Specifying an action is the most important step to accessing the data within. It's simply 2 numbers between 0-9. The first number is to specify the type of file you want to access, either a 0 ***(Directory)*** or a 1 ***(File)***. The second number is to sepcify the action you want to perform (Create, read, write, etc). Here's a table with all of the possible types:
 
 ```
-  Action ID:                     Action Behaviour:		     	        Applies to:
+  Action ID:                     Action Behaviour:                       Applies to:
       0                               Create                                 Both
       1                               Remove                                 Both
       2                                Read                                  Both (Returns subfiles with folders, file data with files)

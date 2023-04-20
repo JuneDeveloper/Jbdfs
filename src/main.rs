@@ -16,15 +16,17 @@ fn main() {
     // type:name:ftype:dataline
 
 
-    let mut testfile = FsFile::new();
-    let filename = "testfile2";
+    let mut testfile = FsDirectory::new();
+    let filename = "testfolder";
     let filepath = "root";
     testfile.filepath = filepath.to_string().add(" -> ").add(filename);
     testfile.filename = filename.to_string();
 
-    //testfile.clone().create("testfs".to_string()).unwrap();
-    testfile.clone().write("testfs".to_string(), "thisisfile2".to_string()).unwrap();
-    println!("{:?}", testfile.clone().read("testfs".to_string()).unwrap());
+   // testfile.clone().remove("testfs".to_string()).unwrap();
+    //testfile.clone().write("testfs".to_string(), "thisisfile2".to_string()).unwrap();
+
+    //testfile.clone().remove("testfs".to_string()).unwrap();
+    //println!("{:?}", testfile.clone().read("testfs".to_string()).unwrap());
 }
 
 fn create_new_filesystem(filepath : String) {

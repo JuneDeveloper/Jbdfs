@@ -1,16 +1,55 @@
 use std::fs;
 use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Error, Write};
 use std::ops::Add;
 use std::path::Path;
+use std::thread::AccessError;
 
 pub struct FsDirectory {
     pub filename : String,
     pub filepath : String
 }
 impl FsDirectory {
+    /// Creates a new FsDirectory struct. Not to be confused with FsDirectory.create()
     pub fn new() -> FsDirectory {
         return FsDirectory { filename: "".to_string(), filepath : "".to_string()};
+    }
+
+    /// Removes a directory.
+    /// This will completely remove it - however a directory must have no subdirectories to be deleted.
+    pub fn remove(self, fs : String) -> std::io::Result<()> {
+        let mut reader = BufReader::new(File::open(fs.clone() + "/meta.jbdfsm")?).lines();
+        let mut dir = "root".to_string();
+        // Search for file
+        let mut data = "".to_string();
+        let mut can_overwrite = true;
+        for line in reader {
+            let line : String = line.unwrap().to_string();
+            let file_type : i128 = line.clone().split(":").nth(0).unwrap().parse::<i128>().unwrap();
+            let file_name : String = line.clone().split(":").nth(1).unwrap().to_string();
+            if file_type == 0 && self.filepath.starts_with(&dir.clone().add(" -> ").add(file_name.as_str())) {
+                dir = dir.add(" -> ").add(file_name.as_str());
+            }
+            if !(file_type == 0 && self.filepath == dir) {
+                data += line.add("\n").as_str();
+            }
+            else if file_type == 0 && self.filepath == dir {
+                let subdirectories : i128 = line.clone().split(":").nth(2).unwrap().parse::<i128>().unwrap();
+                if subdirectories != 0 {
+                    data += line.add("\n").as_str();
+                }
+                can_overwrite = false;
+                break
+            }
+        }
+
+        // Gone, reduced to atoms.
+        if can_overwrite {
+            File::create(fs.clone() + "/meta.jbdfsm")?.write_all(data.as_bytes())
+        } else {
+            Ok(())
+        }
+
     }
 
     /// Adds a directory to meta.jbdfsm
@@ -154,5 +193,9 @@ impl FsDirectory {
         }
         Ok(data)
     }
-
+}
+impl Clone for FsDirectory {
+    fn clone(&self) -> FsDirectory {
+        return FsDirectory { filepath : self.filepath.clone(), filename : self.filename.clone() }
+    }
 }

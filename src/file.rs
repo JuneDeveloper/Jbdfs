@@ -12,8 +12,33 @@ pub struct FsFile {
     pub id : i128
 }
 impl FsFile {
+    /// Creates a new FsFile struct. Not to be confused with FsFile.create()
     pub fn new() -> FsFile {
         return FsFile { filename: "".to_string(), filetype: "".to_string(), filepath : "".to_string(), id: 0 };
+    }
+
+    /// Removes a file. The data will still be there, though inaccessible
+    /// Data that doesn't get removed can be purged with a separate call but separating it this way is a lot faster. (Especially with high file counts)
+    pub fn remove(self, fs : String) -> std::io::Result<()> {
+        let mut reader = BufReader::new(File::open(fs.clone() + "/meta.jbdfsm")?).lines();
+        let mut dir = "root".to_string();
+        // Search for file
+        let mut data = "".to_string();
+        for line in reader {
+            let line : String = line.unwrap().to_string();
+            let file_type : i128 = line.clone().split(":").nth(0).unwrap().parse::<i128>().unwrap();
+            let file_name : String = line.clone().split(":").nth(1).unwrap().to_string();
+            if file_type == 0 && self.filepath.starts_with(&dir.clone().add(" -> ").add(file_name.as_str())) {
+                dir = dir.add(" -> ").add(file_name.as_str());
+            }
+            if !(file_type == 1 && self.filepath == dir.clone().add(" -> ").add(file_name.as_str())) {
+                data += line.add("\n").as_str();
+            }
+        }
+
+        // Gone, reduced to atoms.
+        File::create(fs.clone() + "/meta.jbdfsm")?.write_all(data.as_bytes())
+
     }
 
     /// Creates a new, blank file, and adds it to meta.jbdfsm and data.jbdfs
@@ -127,7 +152,6 @@ impl FsFile {
         write!(file, "{}", data).unwrap();
         println!("{}", data);
         Ok(())
-
     }
 
     /// Reads a file. Data will not be touched. Returns either a byte array, or a string.

@@ -14,13 +14,13 @@ impl FsDirectory {
     }
 
     /// Adds a directory to meta.jbdfsm
-    /// If a directory/file with the same name exists, or a parent directories doesn't exist, the directory won't be created
+    /// If a directory/file with the same name exists, or a parent directory doesn't exist, the directory/file won't be created
     pub fn create(self, fs : String) -> std::io::Result<()> {
         let split_path = self.filepath.split(" -> ").enumerate();
         // Finds the parent folder/directory root
         let mut parent_path : String = "".to_string();
         let folder_count : usize = split_path.clone().count();
-        let parent_folder : String = split_path.clone().nth(folder_count - 2).unwrap().1.to_string();
+        let parent_directory: String = split_path.clone().nth(folder_count - 2).unwrap().1.to_string();
         for (n , folder) in split_path {
             if n == folder_count - 2 {
                 parent_path += folder;
@@ -34,7 +34,7 @@ impl FsDirectory {
         // If there's nothing in the meta file, it can just write directly to it, since there's not going to be anything important there
         if line_count == 0 {
             // The root directory would be the only valid folder location
-            if parent_folder == "root" {
+            if parent_directory == "root" {
                 fs::write(Path::new(&(fs.clone() + "/meta.jbdfsm")), "0:".to_owned() + &self.filename + ":0").unwrap();
             }
         }
@@ -62,7 +62,6 @@ impl FsDirectory {
 
                         // Can't create a file if it already exists!
                         if directory_name == self.filename && current_directory == parent_path {
-
                             added_file = true;
                         }
                         // Found a parent directory!
@@ -74,6 +73,11 @@ impl FsDirectory {
                         // Ignore subfiles if the directory isn't relevant
                         else { ignore_lines = directory_subfile_count; }
 
+                    } else {
+                        let file_name : String = file_metadata.clone().nth(1).unwrap().to_string();
+                        if file_name == self.filename && current_directory == parent_path {
+                            added_file = true;
+                        }
                     }
                 }
                 if ignore_lines > 0 { ignore_lines -= 1 }
@@ -83,7 +87,7 @@ impl FsDirectory {
                 data += (line.as_str().to_owned() + "\n").as_str();
                 if lines_left_in_directory <= 0 && self.filepath == current_directory.clone().add(" -> ").add(&self.filename) && !added_file {
                     data += ("0:".to_owned() + &self.filename + ":0\n").as_str();
-                    if parent_folder != "root" {
+                    if parent_directory != "root" {
                         let folder_name = current_directory.split(" -> ");
                         let folder_name = folder_name.clone().nth(folder_name.count() - 1).unwrap();
 
@@ -103,7 +107,7 @@ impl FsDirectory {
 
     /// Returns an array with all the sub files/directories of a given directory
     /// Returns the names, that's all, subfolders aren't included here
-    pub(crate) fn get_listing(self, fs : String) -> std::io::Result<Vec<String>>{
+    pub fn get_listing(self, fs : String) -> std::io::Result<Vec<String>>{
         // Finds the parent folder/directory root
         let mut data : Vec<String> = Vec::new();
         let line_count : usize = BufReader::new(File::open(fs.clone() + "/meta.jbdfsm")?).lines().count();
@@ -123,7 +127,6 @@ impl FsDirectory {
                 let file_name : String = file_metadata.clone().nth(1).unwrap().to_string();
                 let file_path : String = current_directory.clone().add(" -> ").add(file_name.as_str());
                 let file_type : i128 = file_metadata.clone().nth(0).unwrap().to_string().parse::<i128>().unwrap();
-
 
                 // Add sub directories/files to Vec<String>
                 if found {
@@ -149,7 +152,6 @@ impl FsDirectory {
                 }
             }
         }
-        println!("{:?}", data);
         Ok(data)
     }
 

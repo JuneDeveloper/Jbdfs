@@ -1,6 +1,5 @@
-use std::any::Any;
 use std::fs;
-use std::fs::{File, OpenOptions, read};
+use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, Error, Write};
 use std::ops::Add;
 use std::path::Path;
@@ -20,7 +19,7 @@ impl FsFile {
     /// Removes a file. The data will still be there, though inaccessible
     /// Data that doesn't get removed can be purged with a separate call but separating it this way is a lot faster. (Especially with high file counts)
     pub fn remove(self, fs : String) -> std::io::Result<()> {
-        let mut reader = BufReader::new(File::open(fs.clone() + "/meta.jbdfsm")?).lines();
+        let reader = BufReader::new(File::open(fs.clone() + "/meta.jbdfsm")?).lines();
         let mut dir = "root".to_string();
         // Search for file
         let mut data = "".to_string();
@@ -44,7 +43,7 @@ impl FsFile {
     /// Creates a new, blank file, and adds it to meta.jbdfsm and data.jbdfs
     /// If a directory/file with the same name exists, or a parent directory doesn't exist, the directory/file won't be created
     pub fn create(mut self, fs : String) -> std::io::Result<()> {
-        let mut parent_path : String = self.filepath.clone().replace(&" -> ".to_string().add(self.filename.as_str()), "");
+        let parent_path : String = self.filepath.clone().replace(&" -> ".to_string().add(self.filename.as_str()), "");
         let line_count : usize = BufReader::new(File::open(fs.clone() + "/meta.jbdfsm")?).lines().count();
         self.id = BufReader::new(File::open(fs.clone() + "/data.jbdfs")?).lines().count() as i128 + 1;
 
@@ -57,14 +56,14 @@ impl FsFile {
         } else {
             let mut current_directory : String = "root".to_string();
             let path_arr = self.filepath.split(" -> ");
-            let mut path_arr = path_arr.clone();
+            let path_arr = path_arr.clone();
             let mut path_index : usize = 1;
             let mut ignore_lines : i128 = 0;
             let mut lines_in_directory : i128 = line_count.clone() as i128;
             let mut parent_line : String = "".to_string();
             // Search to make sure the folder definitely exists and the file doesn't already exist
             for line in BufReader::new(File::open(fs.clone() + "/meta.jbdfsm")?).lines() {
-                let mut search_file_name : String = (path_arr.clone().nth(path_index).unwrap().to_string()).to_string();
+                let mut search_file_name: String = (path_arr.clone().nth(path_index).unwrap().to_string()).to_string();
                 let line = line.unwrap().to_string();
                 let file_meta = line.split(":");
                 let file_type : i128 = file_meta.clone().nth(0).unwrap().parse::<i128>().unwrap();
@@ -118,7 +117,7 @@ impl FsFile {
     /// Writes to a file. All data will be overwritten, if the file isn't valid, it won't be written to.
     /// You cannot write to a directory, only files. All data is lost, there's not any kind of backup, so make sure you write to the correct file.
     pub fn write(mut self, fs : String, dat : String) -> std::io::Result<()> {
-        let mut reader = BufReader::new(File::open(fs.clone() + "/meta.jbdfsm")?).lines();
+        let reader = BufReader::new(File::open(fs.clone() + "/meta.jbdfsm")?).lines();
         let mut dir = "root".to_string();
         // Search for ID
         for line in reader {
@@ -135,10 +134,9 @@ impl FsFile {
         }
 
         // Write in the new data
-        let mut reader = BufReader::new(File::open(fs.clone() + "/data.jbdfs")?);
+        let reader = BufReader::new(File::open(fs.clone() + "/data.jbdfs")?);
         let mut data : String = "".to_string();
         for (n, l) in reader.lines().enumerate() {
-            println!("{} | {}", n, self.id);
             if n as i128 == self.id {
                 data += dat.as_str();
             }
@@ -148,14 +146,13 @@ impl FsFile {
         }
         let mut file = OpenOptions::new().write(true).append(false).open(fs.clone() + "/data.jbdfs").unwrap();
         write!(file, "{}", data).unwrap();
-        println!("{}", data);
         Ok(())
     }
 
     /// Reads a file. Data will not be touched. Returns either a byte array, or a string.
     /// You can't read a directory, however you can get a list of all subfiles/subdirectories. This returns the raw bytes, but can also return the string value.
     pub fn read(mut self, fs : String) -> Result<String, Error> {
-        let mut reader = BufReader::new(File::open(fs.clone() + "/meta.jbdfsm")?).lines();
+        let reader = BufReader::new(File::open(fs.clone() + "/meta.jbdfsm")?).lines();
         let mut dir = "root".to_string();
         // Search for ID
         for line in reader {
@@ -171,7 +168,7 @@ impl FsFile {
             }
         }
         // Read the data
-        let mut data = BufReader::new(File::open(fs.clone() + "/data.jbdfs")?).lines().nth(self.id as usize).unwrap().unwrap();
+        let data = BufReader::new(File::open(fs.clone() + "/data.jbdfs")?).lines().nth(self.id as usize).unwrap().unwrap();
         Ok(data)
 
 

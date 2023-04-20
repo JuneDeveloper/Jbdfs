@@ -81,7 +81,6 @@ fn main() {
         else {
             println!("Filetype does not exist!")
         }
-        println!("{:?} | {}", args, args.clone().len());
     }
     else if args[1] == "-cfs" && args.len() > 2 {
         create_new_filesystem(args[2].clone());

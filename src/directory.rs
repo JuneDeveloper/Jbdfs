@@ -1,9 +1,8 @@
 use std::fs;
 use std::fs::File;
-use std::io::{BufRead, BufReader, Error, Write};
+use std::io::{BufRead, BufReader, Write};
 use std::ops::Add;
 use std::path::Path;
-use std::thread::AccessError;
 
 pub struct FsDirectory {
     pub filename : String,
@@ -18,7 +17,7 @@ impl FsDirectory {
     /// Removes a directory.
     /// This will completely remove it - however a directory must have no subdirectories to be deleted.
     pub fn remove(self, fs : String) -> std::io::Result<()> {
-        let mut reader = BufReader::new(File::open(fs.clone() + "/meta.jbdfsm")?).lines();
+        let reader = BufReader::new(File::open(fs.clone() + "/meta.jbdfsm")?).lines();
         let mut dir = "root".to_string();
         // Search for file
         let mut data = "".to_string();

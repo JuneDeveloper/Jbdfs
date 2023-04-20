@@ -1,6 +1,7 @@
+use std::any::Any;
 use std::fs;
-use std::fs::{File, OpenOptions};
-use std::io::{BufRead, BufReader, Write};
+use std::fs::{File, OpenOptions, read};
+use std::io::{BufRead, BufReader, Error, Write};
 use std::ops::Add;
 use std::path::Path;
 
@@ -21,8 +22,6 @@ impl FsFile {
         let mut parent_path : String = self.filepath.clone().replace(&" -> ".to_string().add(self.filename.as_str()), "");
         let line_count : usize = BufReader::new(File::open(fs.clone() + "/meta.jbdfsm")?).lines().count();
         self.id = BufReader::new(File::open(fs.clone() + "/data.jbdfs")?).lines().count() as i128 + 1;
-
-
 
         // Can just write directly with no lines in the file
         let mut data = "".to_string();
@@ -77,21 +76,89 @@ impl FsFile {
                 // Add the new data + Increase the folder subfile count
                 data += line.add("\n").as_str();
                 if lines_in_directory < 1 && current_directory == parent_path && !exists {
-
-                    let p_line_meta = parent_line.clone().split(":").nth(2).unwrap().parse::<i128>().unwrap();
-                    data = data.replace(&parent_line, parent_line.clone().replace(&":".to_owned().add(p_line_meta.to_string().as_str()), ":".to_owned().add((p_line_meta + 1).to_string().as_str()).as_str()).as_str());
-
-
+                    if parent_path != "root" {
+                        let p_line_meta = parent_line.clone().split(":").nth(2).unwrap().parse::<i128>().unwrap();
+                        data = data.replace(&parent_line, parent_line.clone().replace(&":".to_owned().add(p_line_meta.to_string().as_str()), ":".to_owned().add((p_line_meta + 1).to_string().as_str()).as_str()).as_str());
+                    }
                     data += ("1:".to_owned() + &self.filename + ":text:" + self.id.to_string().add("\n").as_str()).as_str();
                     exists = true;
+                    let mut file = OpenOptions::new().write(true).append(true).open(fs.clone() + "/data.jbdfs").unwrap();
+                    writeln!(file, "\n").unwrap();
                 }
             }
         }
-        let mut file = OpenOptions::new().write(true).append(true).open(fs.clone() + "/data.jbdfs").unwrap();
-        writeln!(file, "").unwrap();
         let mut file = OpenOptions::new().write(true).append(false).open(fs.clone() + "/meta.jbdfsm").unwrap();
         write!(file, "{}", data).unwrap();
         Ok(())
     }
-}
 
+    /// Writes to a file. All data will be overwritten, if the file isn't valid, it won't be written to.
+    /// You cannot write to a directory, only files. All data is lost, there's not any kind of backup, so make sure you write to the correct file.
+    pub fn write(mut self, fs : String, dat : String) -> std::io::Result<()> {
+        let mut reader = BufReader::new(File::open(fs.clone() + "/meta.jbdfsm")?).lines();
+        let mut dir = "root".to_string();
+        // Search for ID
+        for line in reader {
+            let line : String = line.unwrap().to_string();
+            let file_type : i128 = line.clone().split(":").nth(0).unwrap().parse::<i128>().unwrap();
+            let file_name : String = line.clone().split(":").nth(1).unwrap().to_string();
+            if file_type == 0 && self.filepath.starts_with(&dir.clone().add(" -> ").add(file_name.as_str())) {
+                dir = dir.add(" -> ").add(file_name.as_str());
+            }
+            else if file_type == 1 && self.filepath == dir.clone().add(" -> ").add(file_name.as_str()) {
+                self.id = line.clone().split(":").nth(3).unwrap().parse::<i128>().unwrap() - 1;
+                break
+            }
+        }
+
+        // Write in the new data
+        let mut reader = BufReader::new(File::open(fs.clone() + "/data.jbdfs")?);
+        let mut data : String = "".to_string();
+        for (n, l) in reader.lines().enumerate() {
+            println!("{} | {}", n, self.id);
+            if n as i128 == self.id {
+                data += dat.as_str();
+            }
+            else {
+                data += (l.unwrap().as_str().to_string() + "\n").as_str();
+            }
+        }
+        let mut file = OpenOptions::new().write(true).append(false).open(fs.clone() + "/data.jbdfs").unwrap();
+        write!(file, "{}", data).unwrap();
+        println!("{}", data);
+        Ok(())
+
+    }
+
+    /// Reads a file. Data will not be touched. Returns either a byte array, or a string.
+    /// You can't read a directory, however you can get a list of all subfiles/subdirectories. This returns the raw bytes, but can also return the string value.
+    pub fn read(mut self, fs : String) -> Result<Vec<u8>, Error> {
+        let mut reader = BufReader::new(File::open(fs.clone() + "/meta.jbdfsm")?).lines();
+        let mut dir = "root".to_string();
+        // Search for ID
+        for line in reader {
+            let line : String = line.unwrap().to_string();
+            let file_type : i128 = line.clone().split(":").nth(0).unwrap().parse::<i128>().unwrap();
+            let file_name : String = line.clone().split(":").nth(1).unwrap().to_string();
+            if file_type == 0 && self.filepath.starts_with(&dir.clone().add(" -> ").add(file_name.as_str())) {
+                dir = dir.add(" -> ").add(file_name.as_str());
+            }
+            else if file_type == 1 && self.filepath == dir.clone().add(" -> ").add(file_name.as_str()) {
+                self.id = line.clone().split(":").nth(3).unwrap().parse::<i128>().unwrap() - 1;
+                break
+            }
+        }
+        // Read the data
+        let mut data = BufReader::new(File::open(fs.clone() + "/data.jbdfs")?).lines().nth(self.id as usize).unwrap().unwrap();
+        Ok(data.as_bytes().to_owned())
+
+
+
+
+    }
+}
+impl Clone for FsFile {
+    fn clone(&self) -> FsFile {
+        return FsFile {id : self.id.clone(), filepath : self.filepath.clone(), filename : self.filename.clone(), filetype : self.filetype.clone() }
+    }
+}

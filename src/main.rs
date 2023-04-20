@@ -13,8 +13,18 @@ fn main() {
         let action_t : i128 = args[1].chars().nth(0).clone().unwrap().to_string().parse::<i128>().unwrap();
         let action_a : i128 = args[1].chars().nth(1).clone().unwrap().to_string().parse::<i128>().unwrap();
         let path : String = args[2].clone();
-        let filepath : String = args[3].clone();
-
+        let mut filepath: String = args[3].clone();
+        filepath = filepath.replace(" ", "");
+        filepath = filepath.replace("->", ">");
+        filepath = filepath.replace("<-", ">");
+        filepath = filepath.replace("<->", ">");
+        filepath = filepath.replace("<", ">");
+        filepath = filepath.replace("/", ">");
+        filepath = filepath.replace("\\", ">");
+        filepath = filepath.replace(">", " -> ");
+        if filepath.starts_with("root -> ") {
+            filepath = "root -> ".to_string().add(filepath.as_str())
+        }
         // Folders
         if action_t == 0 {
             if action_a == 0 {

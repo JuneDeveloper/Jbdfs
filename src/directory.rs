@@ -137,7 +137,6 @@ impl FsDirectory {
                     added_file = true
                 }
             }
-            println!("\n{}", data);
             fs::write(Path::new(&(fs.clone() + "/meta.jbdfsm")), data).unwrap();
         }
 

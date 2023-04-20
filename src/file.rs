@@ -79,7 +79,6 @@ impl FsFile {
                     parent_line = (&line.clone().to_owned()).to_string();
                 }
                 if ignore_lines < 1 {
-                    println!("{} | {}", parent_path, file_directory);
                     if file_type == 0 && parent_path.starts_with(&file_directory) {
                         current_directory = file_directory;
                         search_file_name = file_name.clone();
@@ -97,7 +96,6 @@ impl FsFile {
                         ignore_lines += file_meta.clone().nth(2).unwrap().to_string().parse::<i128>().unwrap();
                     }
                 }
-                println!("{} | {} | {} | {}", current_directory, parent_path, exists, lines_in_directory);
                 // Add the new data + Increase the folder subfile count
                 data += line.add("\n").as_str();
                 if lines_in_directory < 1 && current_directory == parent_path && !exists {
